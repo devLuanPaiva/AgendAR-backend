@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from Estabelecimento.api.views import UserInfoView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -8,4 +9,5 @@ urlpatterns = [
     path('estabelecimento/', include('Estabelecimento.api.urls')),
     path('clientes/', include('Clientes.api.urls')),
     path('token/refresh/', TokenRefreshView.as_view()),
+    path('user-info/', UserInfoView.as_view(), name='user-info'),
 ]

@@ -7,4 +7,5 @@ router.register('', EstabelecimentoViewSet, basename='estabelecimento')
 
 urlpatterns = [
     path('', include(router.urls)),
+    
 ]

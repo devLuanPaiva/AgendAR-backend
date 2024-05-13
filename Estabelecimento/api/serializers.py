@@ -12,7 +12,7 @@ class EstabelecimentoSerializer(serializers.ModelSerializer):
     usuario = UserSerializer()
     class Meta:
         model = Estabelecimento
-        fields = ('id', 'nome', 'cep', 'cidade', 'rua', 'bairro', 'numeroEndereco', 'email', 'contato', 'usuario')
+        fields = ('id', 'nome', 'cep', 'cidade', 'rua', 'estado', 'bairro', 'numeroEndereco', 'email', 'contato', 'usuario')
 
     def create(self, validated_data):
         user_data = validated_data.pop('usuario')
