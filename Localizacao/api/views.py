@@ -3,10 +3,7 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from Localizacao.models import Localicazao
 from Localizacao.api.serializers import LocalizacaoSerializer
-from Estabelecimento.models import Estabelecimento
-from Estabelecimento.api.serializers import EstabelecimentoSerializer
 
 class LocalicacaoToEnderecoView(APIView):
     permission_classes = [IsAuthenticated]
@@ -31,7 +28,7 @@ class LocalicacaoToEnderecoView(APIView):
                             estabelecimento.rua = component['long_name']
                         elif 'sublocality_level_1' in component['types']:
                             estabelecimento.bairro = component['long_name']
-                        elif 'locality' in component['types']:
+                        elif 'administrative_area_level_2' in component['types']:
                             estabelecimento.cidade = component['long_name']
                         elif 'administrative_area_level_1' in component['types']:
                             estabelecimento.estado = component['short_name']
