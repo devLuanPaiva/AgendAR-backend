@@ -27,6 +27,11 @@ class ServicosViewSet(viewsets.ViewSet):
         serializer = ServicosSerializer(servico)
         return Response(serializer.data)
     
+    def destroy(self, request, pk=None):
+        servico = get_object_or_404(Servicos, pk=pk)
+        servico.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
     def create(self, request):
         serializer = ServicosSerializer(data=request.data)
         if serializer.is_valid():
