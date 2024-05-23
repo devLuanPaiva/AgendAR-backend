@@ -15,3 +15,4 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view()),
     path('user-info/', UserInfoView.as_view(), name='user-info'),
 ]
+

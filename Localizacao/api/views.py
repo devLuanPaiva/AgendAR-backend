@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from Localizacao.api.serializers import LocalizacaoSerializer
+from AgendAR.utils import send_error_response
+
 
 class LocalicacaoToEnderecoView(APIView):
     permission_classes = [IsAuthenticated]
@@ -22,9 +24,7 @@ class LocalicacaoToEnderecoView(APIView):
                 if data['results']:
                     endereco = data['results'][0]['address_components']
                     for component in endereco:
-                        if 'street_number' in component['types']:
-                            estabelecimento.numeroEndereco = component['long_name']
-                        elif 'route' in component['types']:
+                        if 'route' in component['types']:
                             estabelecimento.rua = component['long_name']
                         elif 'sublocality_level_1' in component['types']:
                             estabelecimento.bairro = component['long_name']
@@ -37,7 +37,7 @@ class LocalicacaoToEnderecoView(APIView):
                     estabelecimento.save()
                     return Response({'message': 'Endereço atualizado com sucesso'}, status=200)
                 else:
-                    return Response({'error': 'Não foi possível encontrar um endereço para estas coordenadas'}, status=400)
+                    return send_error_response('Não foi possível encontrar um endereço para estas coordenadas')
             else:
-                return Response({'error': 'Erro ao consultar a API do Google'}, status=response.status_code)
+                return send_error_response('Erro ao consultar a API do Google')
         return Response(serializer.errors, status=400)

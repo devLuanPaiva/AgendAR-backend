@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from Servicos.models import Servicos
 from Servicos.api.serializers import ServicosSerializer
 from Estabelecimento.models import Estabelecimento
+from AgendAR.utils import send_error_response
 
 class ServicosViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -14,7 +15,7 @@ class ServicosViewSet(viewsets.ViewSet):
     def list(self, request):
         estabelecimento_id = request.query_params.get('estabelecimento_id')
         if not estabelecimento_id:
-            return Response({'error': 'O ID do estabelecimento é obrigatório.'}, status=status.HTTP_400_BAD_REQUEST)
+            return send_error_response( 'O ID do estabelecimento é obrigatório.')
         
         estabelecimento = get_object_or_404(Estabelecimento, id=estabelecimento_id)
         queryset = Servicos.objects.filter(estabelecimento=estabelecimento)
@@ -41,10 +42,10 @@ class ServicosViewSet(viewsets.ViewSet):
             estabelecimento = serializer.validated_data['estabelecimento']
 
             if Servicos.objects.filter(nome=nome, estabelecimento=estabelecimento).exists():
-                return Response({'error': 'Este serviço já está cadastrado neste estabelecimento.'}, status=status.HTTP_400_BAD_REQUEST)
+                return send_error_response( 'Este serviço já está cadastrado neste estabelecimento.')
 
             if valor <= 0:
-                return Response({'error': 'O valor do serviço deve ser maior que zero.'}, status=status.HTTP_400_BAD_REQUEST)
+                return send_error_response( 'O valor do serviço deve ser maior que zero.')
 
             servico = Servicos(nome=nome, valor=valor, descricao=descricao, estabelecimento=estabelecimento)
             servico.save()
