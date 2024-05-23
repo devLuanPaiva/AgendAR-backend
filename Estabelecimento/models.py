@@ -10,5 +10,5 @@ class Estabelecimento(models.Model):
     bairro = models.CharField(max_length=255)
     numeroEndereco = models.CharField(max_length=10)
     email = models.EmailField()
-    contato = models.CharField(max_length=10)
+    contato = models.CharField(max_length=12)
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)

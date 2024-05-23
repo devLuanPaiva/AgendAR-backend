@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'Localizacao',
     'Servicos',
     'Horarios',
+    'Agendamentos',
 ]
 
 MIDDLEWARE = [

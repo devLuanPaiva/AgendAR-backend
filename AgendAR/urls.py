@@ -10,6 +10,7 @@ urlpatterns = [
     path('servicos/', include('Servicos.api.urls')),
     path('clientes/', include('Clientes.api.urls')),
     path('horarios/', include('Horarios.api.urls')),
+    path('agendamentos/', include('Agendamentos.api.urls')),
     path('localizacao/', include('Localizacao.api.urls')),
     path('token/refresh/', TokenRefreshView.as_view()),
     path('user-info/', UserInfoView.as_view(), name='user-info'),
