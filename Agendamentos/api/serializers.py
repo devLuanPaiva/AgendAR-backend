@@ -17,14 +17,14 @@ class AgendamentosClientesSerializer(serializers.ModelSerializer):
     cliente = ClientesSerializer()
     class Meta:
         model = AgendamentosPeloCliente
-        fields = ('id', 'estabelecimento', 'servico', 'cliente', 'horario_selecionado', 'dia_selecionado')
+        fields = ('id', 'estabelecimento', 'servico', 'cliente', 'horario_selecionado', 'dia_selecionado', 'horario')
 
 class AgendamentosEstabelecimentoSerializer(serializers.ModelSerializer):
     servico = serializers.PrimaryKeyRelatedField(queryset=Servicos.objects.all())
     servico_nome = serializers.SerializerMethodField()
     class Meta:
         model = AgendamentosPeloEstabelecimento
-        fields = ('id', 'estabelecimento', 'servico', 'servico_nome', 'nome', 'contato', 'horario_selecionado', 'dia_selecionado')
+        fields = ('id', 'estabelecimento', 'servico', 'servico_nome', 'nome', 'contato', 'horario_selecionado', 'dia_selecionado', 'horario')
     
     def get_servico_nome(self, obj):
         return obj.servico.nome if obj.servico else None

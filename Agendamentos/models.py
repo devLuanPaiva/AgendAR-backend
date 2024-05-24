@@ -2,6 +2,7 @@ from django.db import models
 from Estabelecimento.models import Estabelecimento
 from Clientes.models import Clientes
 from Servicos.models import Servicos
+from Horarios.models import Horario
 
 
 class AgendamentosPeloCliente(models.Model):
@@ -10,6 +11,7 @@ class AgendamentosPeloCliente(models.Model):
     servico = models.ForeignKey(Servicos, on_delete=models.CASCADE)
     horario_selecionado = models.TimeField()
     dia_selecionado = models.DateField()
+    horario = models.ForeignKey(Horario, on_delete=models.CASCADE)
     
 class AgendamentosPeloEstabelecimento(models.Model):
     estabelecimento = models.ForeignKey(Estabelecimento, on_delete=models.CASCADE)
@@ -18,3 +20,4 @@ class AgendamentosPeloEstabelecimento(models.Model):
     servico = models.ForeignKey(Servicos, on_delete=models.CASCADE)
     horario_selecionado = models.TimeField()
     dia_selecionado = models.DateField()
+    horario = models.ForeignKey(Horario, on_delete=models.CASCADE)

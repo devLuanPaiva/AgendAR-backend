@@ -159,12 +159,13 @@ class AgendamentosStatsViewSet(viewsets.ViewSet):
 
         hoje = date.today()
         inicio_mes = hoje.replace(day=1)
-        inicio_semana = hoje - timedelta(days=hoje.weekday() + 1 if hoje.weekday() != 6 else 0)
+        inicio_semana = hoje - timedelta(days=hoje.weekday())
+        fim_semana = inicio_semana + timedelta(days=6)
 
         def contar_agendamentos(queryset, inicio, fim=None):
             filtro = {'estabelecimento': estabelecimento, 'dia_selecionado__gte': inicio}
             if fim:
-                filtro['dia_selecionado__range'] = [inicio, fim]
+                filtro['dia_selecionado__lte'] = fim
             return queryset.filter(**filtro).count()
 
         agendamentos_mensais = contar_agendamentos(
@@ -174,36 +175,46 @@ class AgendamentosStatsViewSet(viewsets.ViewSet):
         )
 
         agendamentos_semanais = contar_agendamentos(
-            AgendamentosPeloCliente.objects, inicio_semana, hoje
+            AgendamentosPeloCliente.objects, inicio_semana, fim_semana
         ) + contar_agendamentos(
-            AgendamentosPeloEstabelecimento.objects, inicio_semana, hoje
+            AgendamentosPeloEstabelecimento.objects, inicio_semana, fim_semana
         )
 
         agendamentos_diarios = contar_agendamentos(
-            AgendamentosPeloCliente.objects, hoje
+            AgendamentosPeloCliente.objects, hoje, hoje
         ) + contar_agendamentos(
-            AgendamentosPeloEstabelecimento.objects, hoje
+            AgendamentosPeloEstabelecimento.objects, hoje, hoje
         )
 
         def calcular_percentual(atual, passado):
             return ((atual - passado) / passado) * 100 if passado else 0
 
+        # Calculando agendamentos passados
+        mes_passado = inicio_mes - timedelta(days=1)
+        inicio_mes_passado = mes_passado.replace(day=1)
+        fim_mes_passado = mes_passado
+
         agendamentos_mensais_passado = contar_agendamentos(
-            AgendamentosPeloCliente.objects, inicio_mes - timedelta(days=1), inicio_mes - timedelta(days=1)
+            AgendamentosPeloCliente.objects, inicio_mes_passado, fim_mes_passado
         ) + contar_agendamentos(
-            AgendamentosPeloEstabelecimento.objects, inicio_mes - timedelta(days=1), inicio_mes - timedelta(days=1)
+            AgendamentosPeloEstabelecimento.objects, inicio_mes_passado, fim_mes_passado
         )
+
+        inicio_semana_passada = inicio_semana - timedelta(days=7)
+        fim_semana_passada = fim_semana - timedelta(days=7)
 
         agendamentos_semanais_passado = contar_agendamentos(
-            AgendamentosPeloCliente.objects, inicio_semana - timedelta(days=7), inicio_semana - timedelta(days=1)
+            AgendamentosPeloCliente.objects, inicio_semana_passada, fim_semana_passada
         ) + contar_agendamentos(
-            AgendamentosPeloEstabelecimento.objects, inicio_semana - timedelta(days=7), inicio_semana - timedelta(days=1)
+            AgendamentosPeloEstabelecimento.objects, inicio_semana_passada, fim_semana_passada
         )
 
+        dia_passado = hoje - timedelta(days=1)
+
         agendamentos_diarios_passado = contar_agendamentos(
-            AgendamentosPeloCliente.objects, hoje - timedelta(days=1), hoje - timedelta(days=1)
+            AgendamentosPeloCliente.objects, dia_passado, dia_passado
         ) + contar_agendamentos(
-            AgendamentosPeloEstabelecimento.objects, hoje - timedelta(days=1), hoje - timedelta(days=1)
+            AgendamentosPeloEstabelecimento.objects, dia_passado, dia_passado
         )
 
         response_data = {
