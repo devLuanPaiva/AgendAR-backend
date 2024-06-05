@@ -6,9 +6,9 @@ from .serializers import AgendamentosClientesSerializer, AgendamentosEstabelecim
 from Clientes.models import Clientes
 from Estabelecimento.models import Estabelecimento
 from django.shortcuts import get_object_or_404
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta  
 from django.db.models import F
-from AgendAR.utils import send_error_response
+from rest_framework.exceptions import ValidationError
 
 class AgendamentoClienteViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -18,7 +18,7 @@ class AgendamentoClienteViewSet(viewsets.ModelViewSet):
     def list(self, request):
         cliente_id = request.query_params.get('cliente_id')
         if not cliente_id:
-            return send_error_response( 'O ID do cliente é obrigatório.')
+            return ValidationError('O ID do cliente é obrigatório.')
         cliente = get_object_or_404(Clientes, id=cliente_id)
         quetyset = AgendamentosPeloCliente.objects.filter(cliente=cliente)
         serializer = AgendamentosClientesSerializer(quetyset, many=True)
@@ -32,22 +32,20 @@ class AgendamentoClienteViewSet(viewsets.ModelViewSet):
         dia_selecionado = data.get('dia_selecionado')
         
         if AgendamentosPeloCliente.objects.filter(estabelecimento=estabelecimento, cliente=cliente, servico=servico, horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado).exists():
-            return send_error_response('Você já realizou este mesmo agendamento.')
+            raise ValidationError('Você já realizou este mesmo agendamento.')
         
-        elif AgendamentosPeloCliente.objects.filter(estabelecimento=estabelecimento,horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado).exists():
-            return send_error_response('Este horário já foi reservado.')
+        if AgendamentosPeloCliente.objects.filter(estabelecimento=estabelecimento,horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado).exists():
+            raise ValidationError('Este horário já foi reservado.')
         
-        elif AgendamentosPeloCliente.objects.filter(estabelecimento=estabelecimento, servico=servico, dia_selecionado=dia_selecionado, cliente=cliente).exists():
-            return send_error_response('Você já reservou este serviço no mesmo dia em outro horário.')
+        if AgendamentosPeloCliente.objects.filter(estabelecimento=estabelecimento, servico=servico, dia_selecionado=dia_selecionado, cliente=cliente).exists():
+            raise ValidationError('Você já reservou este serviço no mesmo dia em outro horário.')
         
-        elif AgendamentosPeloCliente.objects.filter(horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado, cliente=cliente).exists():
-            return send_error_response('Você já reservou este horário em outro estabelecimento.')
+        if AgendamentosPeloCliente.objects.filter(horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado, cliente=cliente).exists():
+            raise ValidationError('Você já reservou este horário em outro estabelecimento.')
             
     def create(self, request, *args, **kwargs):
         self.validated_agendamentoCliente(request.data)
         return super().create(request, *args, **kwargs)
-    
-    
     
 class AgendamentoEstabelecimentoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -57,7 +55,7 @@ class AgendamentoEstabelecimentoViewSet(viewsets.ModelViewSet):
     def list(self, request):
         estabelecimento_id = request.query_params.get('estabelecimento_id')
         if not estabelecimento_id:
-            return send_error_response("O ID do estabelecimento é obrigatório.")
+            return ValidationError("O ID do estabelecimento é obrigatório.")
         estabelecimento = get_object_or_404(Estabelecimento, id=estabelecimento_id)
 
         agendamentos_cliente = AgendamentosPeloCliente.objects.filter(estabelecimento=estabelecimento)
@@ -79,21 +77,22 @@ class AgendamentoEstabelecimentoViewSet(viewsets.ModelViewSet):
         dia_selecionado = data.get('dia_selecionado')
         
         if AgendamentosPeloEstabelecimento.objects.filter(estabelecimento=estabelecimento, nome=nome, contato=contato, servico=servico, horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado).exists():
-            return send_error_response('Você já realizou este mesmo agendamento.')
+            raise ValidationError('Você já realizou este mesmo agendamento.')
         
-        elif AgendamentosPeloEstabelecimento.objects.filter(estabelecimento=estabelecimento,horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado).exists():
-            return send_error_response('Este horário já foi reservado.')
+        if AgendamentosPeloEstabelecimento.objects.filter(estabelecimento=estabelecimento,horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado).exists():
+            raise ValidationError('Este horário já foi reservado.')
         
-        elif AgendamentosPeloEstabelecimento.objects.filter(horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado, nome=nome, contato=contato).exists():
-            return send_error_response('Esta pessoa já reservou este horário em outro estabelecimento.')
+        if AgendamentosPeloEstabelecimento.objects.filter(horario_selecionado=horario_selecionado, dia_selecionado=dia_selecionado, nome=nome, contato=contato).exists():
+            raise ValidationError('Esta pessoa já reservou este horário em outro estabelecimento.')
         
-        elif AgendamentosPeloEstabelecimento.objects.filter(dia_selecionado=dia_selecionado, nome=nome, contato=contato, estabelecimento=estabelecimento, servico=servico).exists():
-            return send_error_response('Esta pessoa já reservou este serviço no mesmo dia em outro horário.')
-        
+        if AgendamentosPeloEstabelecimento.objects.filter(dia_selecionado=dia_selecionado, nome=nome, contato=contato, estabelecimento=estabelecimento, servico=servico).exists():
+            raise ValidationError('Esta pessoa já reservou este serviço no mesmo dia em outro horário.')
 
     def create(self, request, *args, **kwargs):
         self.validated_agendamentoEstabelecimento(request.data)
         return super().create(request, *args, **kwargs)
+
+
     
 
 class AgendamentosHojeViewSet(viewsets.ViewSet):
@@ -102,7 +101,7 @@ class AgendamentosHojeViewSet(viewsets.ViewSet):
     def list(self, request):
         estabelecimento_id = request.query_params.get('estabelecimento_id')
         if not estabelecimento_id:
-            return send_error_response('O ID do estabelecimento é obrigatório.')
+            return ValidationError('O ID do estabelecimento é obrigatório.')
         estabelecimento = get_object_or_404(Estabelecimento, id=estabelecimento_id)
 
         hoje = date.today()
@@ -122,7 +121,7 @@ class AgendamentosSemanaViewSet(viewsets.ViewSet):
     def list(self, request):
         estabelecimento_id = request.query_params.get('estabelecimento_id')
         if not estabelecimento_id:
-            return send_error_response('O ID do estabelecimento é obrigatório.')
+            return ValidationError('O ID do estabelecimento é obrigatório.')
         estabelecimento = get_object_or_404(Estabelecimento, id=estabelecimento_id)
 
         hoje = date.today()
@@ -151,15 +150,15 @@ class AgendamentosStatsViewSet(viewsets.ViewSet):
     def list(self, request):
         estabelecimento_id = request.query_params.get('estabelecimento_id')
         if not estabelecimento_id:
-            return send_error_response('O ID do estabelecimento é obrigatório.')
+            return ValidationError('O ID do estabelecimento é obrigatório.')
 
         estabelecimento = Estabelecimento.objects.filter(id=estabelecimento_id).first()
         if not estabelecimento:
-            return send_error_response('Estabelecimento não encontrado.')
+            return ValidationError('Estabelecimento não encontrado.')
 
         hoje = date.today()
         inicio_mes = hoje.replace(day=1)
-        inicio_semana = hoje - timedelta(days=hoje.weekday())
+        inicio_semana = hoje - timedelta(days=hoje.weekday() + 1 if hoje.weekday() != 6 else 0)
         fim_semana = inicio_semana + timedelta(days=6)
 
         def contar_agendamentos(queryset, inicio, fim=None):

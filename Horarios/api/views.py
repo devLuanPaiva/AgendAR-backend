@@ -16,10 +16,10 @@ class HorarioViewSet(viewsets.ModelViewSet):
     def list(self, request):
         estabelecimento_id = request.query_params.get('estabelecimento_id')
         if not estabelecimento_id:
-            return send_error_response( 'O ID do estabelecimento é obrigatório.')
+            return send_error_response('O ID do estabelecimento é obrigatório.')
         estabelecimento = get_object_or_404(Estabelecimento, id=estabelecimento_id)
-        quetyset = Horario.objects.filter(estabelecimento=estabelecimento)
-        serializer = HorarioSerializer(quetyset, many=True)
+        queryset = Horario.objects.filter(estabelecimento=estabelecimento)
+        serializer = HorarioSerializer(queryset, many=True)
         return Response(serializer.data)
     
     def create(self, request, *args, **kwargs):
@@ -39,22 +39,37 @@ class HorarioViewSet(viewsets.ModelViewSet):
         estabelecimento = data.get('estabelecimento')
         
         if Horario.objects.filter(dia_da_semana=dia_da_semana, turno=turno, horario_inicio=horario_inicio, horario_fim=horario_fim, estabelecimento=estabelecimento).exists():
-            return send_error_response('Este horário já está cadastrado para o estabelecimento.')
-        elif Horario.objects.filter(dia_da_semana=dia_da_semana, turno=turno, estabelecimento=estabelecimento).exists():
-            return send_error_response('Já existe um horário cadastrado para este turno e dia neste estabelecimento.')
+            raise ValidationError('Este horário já está cadastrado para o estabelecimento.')
+        if Horario.objects.filter(dia_da_semana=dia_da_semana, turno=turno, estabelecimento=estabelecimento).exists():
+            raise ValidationError('Já existe um horário cadastrado para este turno, neste dia e neste estabelecimento.')
         
+        if turno == "NOITE":
+            horario_inicio_hours, _ = map(int, horario_inicio.split(':'))
+            horario_fim_hours, _ = map(int, horario_fim.split(':'))
+
+            if (horario_inicio_hours or horario_fim_hours) < 18:
+                raise ValidationError('Horário inicial para o turno da noite deve ser 18h ou posterior.')
+        
+        elif turno == "TARDE":
+            horario_inicio_hours, _ = map(int, horario_inicio.split(':'))
+            horario_fim_hours, _ = map(int, horario_fim.split(':'))
+            if not (12 <= horario_inicio_hours <= 18) or not (12 <= horario_fim_hours <= 18):
+                raise ValidationError('O horário para o turno da tarde deve estar entre 12h e 18h.')
+            
+        elif turno == "MANHA":
+            horario_inicio_hours, _ = map(int, horario_inicio.split(':'))
+            horario_fim_hours, _ = map(int, horario_fim.split(':'))
+            if (horario_inicio_hours  or horario_fim_hours) > 12:
+                raise ValidationError('Horário para o turno da manhã deve ser inferior à 12h.')
+            
+        
+
         horario_inicio_hours, horario_inicio_minutes = map(int, horario_inicio.split(':'))
         horario_fim_hours, horario_fim_minutes = map(int, horario_fim.split(':'))
         
         if horario_inicio_hours > horario_fim_hours or (horario_inicio_hours == horario_fim_hours and horario_inicio_minutes >= horario_fim_minutes):
-            return send_error_response('Horário escolhido é inválido. O horário de início não pode ser maior ou igual ao de término.')
-        
-        if turno == "MANHA" and (horario_inicio_hours >= 12 or horario_fim_hours >= 12):
-            return send_error_response('Horário escolhido é incompatível com o turno. O turno da manhã termina às 12 horas.')
-        elif turno == "TARDE" and (horario_inicio_hours < 12 or horario_fim_hours >= 18):
-            return send_error_response('Horário escolhido é incompatível com o turno. O turno da tarde inicia às 12 e termina às 18 horas.')
-        elif turno == "NOITE" and (horario_inicio_hours < 18 or horario_fim_hours >= 24):
-            return send_error_response('Horário escolhido é incompatível com o turno. O turno da noite inicia às 18 e termina às 24 horas.')
+            raise ValidationError('Horário escolhido é inválido. O horário de início não pode ser maior ou igual ao de término.')
+
     
     
 class TempoHorarioViewSet(viewsets.ModelViewSet):
